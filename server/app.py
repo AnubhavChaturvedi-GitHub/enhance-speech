@@ -11,6 +11,7 @@ from urllib.parse import quote, urlparse
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.background import BackgroundTask
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from . import dsp, jobs, media, transcribe
@@ -183,7 +184,8 @@ def exported_file(track_id: str, name: str) -> FileResponse:
     path = jobs.TRACKS / track_id / "exports" / Path(name).name
     if not path.is_file():
         raise HTTPException(404, "File not found")
-    return FileResponse(path, filename=path.name)
+    # The browser now has the user's copy, and every click mixes a fresh one, so a second full copy need not stay on disk.
+    return FileResponse(path, filename=path.name, background=BackgroundTask(path.unlink, missing_ok=True))
 
 
 # HEAD lets the page wait for Whisper to finish, then start the browser's own download.
