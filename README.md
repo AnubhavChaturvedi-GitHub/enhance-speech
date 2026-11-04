@@ -2,6 +2,8 @@
 
 A local, private rebuild of the Adobe Podcast "Enhance Speech" tool. Drop in audio or video and get speech that sounds studio-recorded, with live sliders for speech, music and background. Everything runs on your own computer.
 
+![The workspace: a queue of files on the left, live Speech, Music and Background sliders on the right](web/assets/workspace.jpg)
+
 ## Run
 
 ```bash
