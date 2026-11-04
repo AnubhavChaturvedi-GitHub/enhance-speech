@@ -100,7 +100,12 @@ class Store:
                 "error": None,
                 "createdAt": time.time(),
             }
-            self._save()
+            try:
+                self._save()
+            except OSError:
+                del self.tracks[track_id]
+                shutil.rmtree(folder, ignore_errors=True)
+                raise
         return track_id, folder
 
     def enqueue(self, track_id: str) -> None:
