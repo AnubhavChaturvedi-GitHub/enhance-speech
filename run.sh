@@ -11,6 +11,11 @@ if [ ! -x .venv/bin/python ]; then
   uv venv --python 3.12 .venv
   uv pip install --python .venv/bin/python -r requirements.txt
 fi
+if curl -fs "http://127.0.0.1:$PORT/api/tracks" >/dev/null 2>&1; then
+  echo "Enhance Speech is already running: http://localhost:$PORT"
+  [ -n "$NO_OPEN" ] || open "http://localhost:$PORT"
+  exit 0
+fi
 echo "Enhance Speech: http://localhost:$PORT"
 # Opens the page once the server answers. NO_OPEN=1 skips this.
 if [ -z "$NO_OPEN" ]; then

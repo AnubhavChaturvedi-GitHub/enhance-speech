@@ -1,6 +1,7 @@
 """Track store and the single-worker queue. Files process one at a time, in upload order."""
 from __future__ import annotations
 
+import fcntl
 import json
 import logging
 import os
@@ -41,8 +42,17 @@ class Store:
         self.wake = threading.Event()
         self.tracks: dict[str, dict] = {}
         TRACKS.mkdir(parents=True, exist_ok=True)
+        self._claim_folder()
         self._load()
         threading.Thread(target=self._worker, daemon=True, name="enhance-worker").start()
+
+    def _claim_folder(self) -> None:
+        """Holds a lock for as long as this server runs. A second server would put a running job back in the queue and overwrite its files."""
+        self._claim = open(DATA / ".lock", "a")
+        try:
+            fcntl.flock(self._claim, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            raise SystemExit("Enhance Speech is already running from this folder.") from None
 
     def _load(self) -> None:
         self.tracks = self._read_list()
