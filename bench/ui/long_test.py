@@ -20,5 +20,7 @@ while True:
         break
     time.sleep(3)
 dt = time.time() - t0
-print(f"{t['state']} error={t['error']} duration={t['duration']:.1f}s took {dt:.0f}s = {t['duration']/dt:.2f}x realtime; peak server memory {peak:.0f} MB")
+# A failed job has no duration, and its error is the one thing this line must not lose.
+duration = t["duration"] or 0
+print(f"{t['state']} error={t['error']} duration={duration:.1f}s took {dt:.0f}s = {duration/dt:.2f}x realtime; peak server memory {peak:.0f} MB")
 print("TRACK", track["id"])
