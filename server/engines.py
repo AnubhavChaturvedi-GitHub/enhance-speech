@@ -86,11 +86,16 @@ class Separator:
         if path.exists():
             return path
         folder.mkdir(parents=True, exist_ok=True)
-        part = folder / "checkpoint.part"
-        urllib.request.urlretrieve(self.URL, part)
-        state = torch.load(part, map_location="cpu", weights_only=False)["state_dict"]
-        torch.save({k.removeprefix("model."): v for k, v in state.items()}, path)
-        part.unlink()
+        part, saving = folder / "checkpoint.part", folder / "model.pt.part"
+        try:
+            urllib.request.urlretrieve(self.URL, part)
+            state = torch.load(part, map_location="cpu", weights_only=False)["state_dict"]
+            # Under its real name only when complete: a partial file would fail every later job, and nothing would point at it.
+            torch.save({k.removeprefix("model."): v for k, v in state.items()}, saving)
+            os.replace(saving, path)
+        finally:
+            part.unlink(missing_ok=True)
+            saving.unlink(missing_ok=True)
         return path
 
     def load(self) -> None:
