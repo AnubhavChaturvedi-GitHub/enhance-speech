@@ -123,7 +123,6 @@ Sound, most likely to be noticed first:
 
 Running the app:
 
-- **Ctrl-C:** during an ffmpeg stage it marks the job failed.
 - **Bad samples:** one NaN or inf sample in a float WAV fails the job with a generic error.
 - **`ui/e2e.py`, `ui/long_test.py`:** they crash on a failed job instead of reporting it.
 

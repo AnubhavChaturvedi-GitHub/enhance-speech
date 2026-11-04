@@ -28,7 +28,8 @@ class MediaInfo:
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess:
     # ffmpeg takes commands from its stdin: a "q" typed in the server's terminal would end it early with exit code 0.
-    return subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    # Its own session keeps Ctrl-C from reaching it, which would read as a bad file and mark the job failed while the server is stopping.
+    return subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL, start_new_session=True)
 
 
 def probe(path: Path) -> MediaInfo:
