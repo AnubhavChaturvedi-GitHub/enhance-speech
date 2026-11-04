@@ -120,7 +120,7 @@ async def main():
         start = time.time()
         t = await wait_state(page, "nomic60.wav", {"finished", "failed"})
         took = time.time() - start
-        check("first file finished", t["state"] == "finished", f"{t.get('error')} duration {t['duration']:.1f}s")
+        check("first file finished", t["state"] == "finished", f"{t.get('error')} duration {t['duration'] or 0:.1f}s")
         await page.wait_for_selector("#play", timeout=20000)
         await page.wait_for_timeout(1500)
         await page.screenshot(path=str(SHOTS / "e2e_detail.png"))

@@ -111,9 +111,7 @@ Against Adobe's stems: isolated speech 21.3 dB SI-SDR, music 12.5 dB, background
 
 ## Open findings
 
-The last independent review was stopped at the owner's request, so no second reviewer checked these. The reviewer measured most of them on saved stems or by direct calls, and a few by reading the code. They need an unusual file or a failure. Fixed from that review: a key typed in the server's terminal cutting a file short, a failed job killing the worker, double-click delete taking the next track too, `ui/mock_shot.py` deleting real tracks, and the loud moments above.
-
-Sound, most likely to be noticed first:
+The last independent review was stopped at the owner's request, so no second reviewer checked these. The reviewer measured them on saved stems or by direct calls. They need an unusual file. Everything it found about running the app has since been fixed, each in its own pull request.
 
 - **A hit no louder than the speech can still move the highs:** `highs.correction` is a power mean, and a broadband hit reads as a fricative. 0.1 s at 5 dB over the speech moved one voice's 10 kHz gain by 3.7 dB.
 - **Interviews with two different sources:** a codec talker can take a wideband talker's highs boost, about +9 dB at 8-12 kHz (`highs.py`).
@@ -121,9 +119,6 @@ Sound, most likely to be noticed first:
 - **Hiss on part of a recording:** it tightens the limit on the clean part too (`limit.py`).
 - **Whispers:** the speech gate's breath rule can remove them. Tested on a synthetic whisper only.
 
-Running the app:
-
-- **`ui/e2e.py`, `ui/long_test.py`:** they crash on a failed job instead of reporting it.
 
 ## What was rejected
 
