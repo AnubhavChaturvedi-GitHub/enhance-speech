@@ -7,6 +7,7 @@ bench/ holds the scripts that chose these steps by scoring them against referenc
 """
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Callable, Sequence
 
@@ -20,6 +21,15 @@ Report = Callable[[str, float], None]
 # Models and measures in the chain have fixed floors: DeepFilterNet removes speech under about -40 dBFS as if it were silence. So a recording whose
 # median voiced frame is under QUIET_DB runs through at QUIET_TO_DB, and its stems come back down at the end. The quietest of ten real recordings sits at -27 dB.
 QUIET_DB, QUIET_TO_DB = -30.0, -20.0
+# Bytes a job holds on disk at its peak, per sample of audio: its float32 stems and the merged file. About 21 and 12 GB per hour.
+ROOM_PER_SAMPLE = {"v2": 4 * 31, "v1": 4 * 18}
+
+
+def _check_room(work: Path, samples: float, mode: str, written: int = 0) -> None:
+    """Stems are memory-mapped, so a full disk would only show when they are written, hours into a long file. `written`: bytes of the job's already on disk."""
+    need, free = samples * ROOM_PER_SAMPLE[mode], shutil.disk_usage(work).free + written
+    if free < need:
+        raise media.MediaError(f"This file needs about {need / 1e9:.1f} GB of free disk space while it processes, and {free / 1e9:.1f} GB is free. Free up some space and try again.")
 
 
 def _open(path: Path, n: int, channels: int, mode: str = "w+") -> np.memmap:
@@ -217,10 +227,13 @@ def process(source: Path, work: Path, out: Path, mode: str, report: Report) -> d
     # The track's folder exists until someone deletes it; a parent made here would outlive that.
     work.mkdir(exist_ok=True)
     report("processing", 0.0)
+    _check_room(work, info.duration * SR, mode)
     media.decode_stereo(source, work / "original.raw", info.audio_channels)
     n = (work / "original.raw").stat().st_size // 8
     if n == 0:
         raise media.MediaError("The file contains no audio to enhance.")
+    # Some files do not say how long they are until they are decoded.
+    _check_room(work, n, mode, written=n * 8)
     original = _open(work / "original.raw", n, 2, "r")
     channel = _channel_choice(original)
     mono = _open(work / "mono.raw", n, 1)
