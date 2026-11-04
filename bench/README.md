@@ -34,7 +34,7 @@ The sample's distance and tone errors end slightly worse than the old chain's, w
 
 How much of the distance is left to win, for 1102, Audio and the sample: the raw recording scores 9.96, 9.35 and 11.06. This chain scores 4.56, 4.21 and 5.76. The same structure guided by Adobe's own envelope scores 1.71, 1.67 and 2.18. So the blend is the right shape, and most of what remains is Sidon's envelope against Adobe's private model. A literal match is out of reach without that model.
 
-Word match against the original's transcript (Whisper large-v3), enhanced then Adobe: 1102 0.989 and 0.983, Audio 0.980 and 0.963, sample 0.996 and 0.996. "TAP Academy" survives in enhanced and in Adobe's. The isolated stem reads it as "TapAcad", which is why Sidon hears the speech before the second denoiser pass.
+Word match against the original's transcript (Whisper large-v3), enhanced then Adobe: 1102 0.989 and 0.983, Audio 0.980 and 0.963, sample 0.996 and 0.996. A brand name in the recording survives in enhanced and in Adobe's. The isolated stem garbles it into one wrong word, which is why Sidon hears the speech before the second denoiser pass.
 
 DNSMOS cannot see these differences (Adobe 3.36, the old chain 3.31 on 1102), so it was not used to choose.
 
