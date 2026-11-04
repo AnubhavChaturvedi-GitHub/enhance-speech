@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+data/
+models/
+bench/out/
+bench/work/
+bench/envs/
+bench/real/
+*.raw
+.DS_Store
+bench/ui/shots/
+.env

@@ -1,0 +1,15 @@
+# torch is held below 2.6 because DeepFilterNet needs the older torchaudio API.
+torch<2.6
+torchaudio<2.6
+transformers>=4.44,<4.50
+numpy<2
+scipy
+soundfile
+librosa
+huggingface_hub
+deepfilternet
+clearvoice
+faster-whisper
+fastapi
+uvicorn[standard]
+python-multipart
