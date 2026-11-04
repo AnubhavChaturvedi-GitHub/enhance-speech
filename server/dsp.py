@@ -110,7 +110,7 @@ def apply_fir(x: np.ndarray, taps: np.ndarray) -> np.ndarray:
 
 
 def limiter(x: np.ndarray, ceiling: float = 0.98, lookahead_ms: float = 5.0) -> np.ndarray:
-    """Transparent peak limiter: only touches samples that would pass the ceiling."""
+    """Transparent peak limiter: only changes samples within 10 ms of one that would pass the ceiling."""
     peak = np.abs(x)
     if peak.max() <= ceiling:
         return x
@@ -118,7 +118,8 @@ def limiter(x: np.ndarray, ceiling: float = 0.98, lookahead_ms: float = 5.0) -> 
     gain = np.minimum(1.0, ceiling / np.maximum(peak, 1e-9))
     gain = minimum_filter1d(gain, size=size * 2 + 1)
     smooth = np.hanning(size * 2 + 1)
-    gain = fftconvolve(gain, smooth / smooth.sum(), mode="same")
+    # Held at its edge values: past the block's ends is not silence, and smoothing into it would fade them by 6 dB.
+    gain = fftconvolve(np.pad(gain, size, mode="edge"), smooth / smooth.sum(), mode="valid")
     return (x * np.minimum(gain, 1.0)).astype(np.float32)
 
 
