@@ -123,7 +123,7 @@ Sound, most likely to be noticed first:
 
 Running the app:
 
-- **Smaller ones:** Ctrl-C during an ffmpeg stage marks the job failed, WAV exports past 4 GB are broken (over about 4 h 8 min), every download leaves a copy in the track's folder until the track is deleted, and deleting a track does not stop its transcript.
+- **Smaller ones:** Ctrl-C during an ffmpeg stage marks the job failed, every download leaves a copy in the track's folder until the track is deleted, and deleting a track does not stop its transcript.
 - **Bad samples:** one NaN or inf sample in a float WAV fails the job with a generic error.
 - **`ui/e2e.py`, `ui/long_test.py`:** they crash on a failed job instead of reporting it.
 

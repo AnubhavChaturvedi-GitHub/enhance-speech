@@ -108,11 +108,11 @@ def _spare_name(out: Path) -> Path:
 
 
 def export_audio(merged: Path, gains: dict[str, float], out: Path) -> None:
-    # The soft limiter keeps a loud mix from clipping once stems are summed.
+    # The soft limiter keeps a loud mix from clipping once stems are summed. RF64 only applies past the 4 GB a plain WAV can describe, over about 4 h 8 min.
     af = f"{_pan(gains)},alimiter=limit=0.99:attack=2:release=40:level=disabled:latency=1"
     spare = _spare_name(out)
     try:
-        result = _run(["ffmpeg", "-y", "-v", "error", "-i", str(merged), "-map", "0:a:0", "-af", af, "-c:a", "pcm_s24le", str(spare)])
+        result = _run(["ffmpeg", "-y", "-v", "error", "-i", str(merged), "-map", "0:a:0", "-af", af, "-c:a", "pcm_s24le", "-rf64", "auto", str(spare)])
         if result.returncode != 0:
             raise MediaError("An error occurred while downloading the file. Please try again.")
         os.replace(spare, out)
