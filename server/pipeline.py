@@ -235,7 +235,13 @@ def process(source: Path, work: Path, out: Path, mode: str, report: Report) -> d
         raise media.MediaError("The file contains no audio to enhance.")
     # Some files do not say how long they are until they are decoded.
     _check_room(work, n, mode, written=n * 8)
-    original = _open(work / "original.raw", n, 2, "r")
+    original = _open(work / "original.raw", n, 2, "r+")
+    # A plugin glitch can leave one NaN or inf sample in a float WAV, and the transforms downstream refuse those.
+    for start in range(0, n, SR * 60):
+        block = np.asarray(original[start : start + SR * 60])
+        if not np.isfinite(block).all():
+            original[start : start + SR * 60] = np.nan_to_num(block, nan=0.0, posinf=1.0, neginf=-1.0)
+    original.flush()
     channel = _channel_choice(original)
     mono = _open(work / "mono.raw", n, 1)
     for start in range(0, n, SR * 60):
