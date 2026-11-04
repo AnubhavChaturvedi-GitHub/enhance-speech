@@ -123,7 +123,7 @@ Sound, most likely to be noticed first:
 
 Running the app:
 
-- **Smaller ones:** Ctrl-C during an ffmpeg stage marks the job failed, and deleting a track does not stop its transcript.
+- **Ctrl-C:** during an ffmpeg stage it marks the job failed.
 - **Bad samples:** one NaN or inf sample in a float WAV fails the job with a generic error.
 - **`ui/e2e.py`, `ui/long_test.py`:** they crash on a failed job instead of reporting it.
 
