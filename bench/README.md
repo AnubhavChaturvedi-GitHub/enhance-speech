@@ -124,7 +124,6 @@ Sound, most likely to be noticed first:
 
 Running the app:
 
-- **Full disk:** a long file fails late with no free-space check up front.
 - **Two servers:** a second `./run.sh` during a job can overwrite that job's working files.
 - **First download fails:** a first v1 job can run on random weights if its model download fails. A truncated BandIt `model.pt` fails every v2 job until it is deleted.
 - **Smaller ones:** Ctrl-C during an ffmpeg stage marks the job failed, WAV exports past 4 GB are broken (over about 4 h 8 min), every download leaves a copy in the track's folder until the track is deleted, a damaged `tracks.json` stops the server starting, `run.sh`'s page-opening loop can outlive a failed start, and deleting a track does not stop its transcript.
