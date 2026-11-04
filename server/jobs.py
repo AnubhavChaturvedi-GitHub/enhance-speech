@@ -47,15 +47,25 @@ class Store:
         if INDEX.exists():
             self.tracks = json.loads(INDEX.read_text())
         for track_id, track in list(self.tracks.items()):
+            # A delete that could not save the list on a full disk leaves its track listed with no folder.
+            if not (TRACKS / track_id).is_dir():
+                del self.tracks[track_id]
             # A job interrupted by a restart goes back in the queue.
-            if track["state"] == "processing":
+            elif track["state"] == "processing":
                 track.update(state="queued", stage=None, progress=0)
             # An upload interrupted by a restart never finished arriving.
             elif track["state"] == "receiving":
                 del self.tracks[track_id]
                 shutil.rmtree(TRACKS / track_id, ignore_errors=True)
-        self._save()
+        self._save_if_room()
         self.wake.set()
+
+    def _save_if_room(self) -> None:
+        """Saves the list, but a full disk must not stop the app: it is how the user deletes tracks to make room."""
+        try:
+            self._save()
+        except OSError:
+            log.error("could not save the track list\n%s", traceback.format_exc())
 
     def _save(self) -> None:
         tmp = INDEX.with_suffix(".tmp")
@@ -102,9 +112,10 @@ class Store:
             if track_id not in self.tracks:
                 return False
             del self.tracks[track_id]
-            self._save()
-        # A running job notices the missing track at its next progress report.
+        # A running job notices the missing track at its next progress report. The folder goes first: on a full disk that is what makes room to save the list.
         shutil.rmtree(TRACKS / track_id, ignore_errors=True)
+        with self.lock:
+            self._save_if_room()
         return True
 
     def _update(self, track_id: str, **fields) -> None:
