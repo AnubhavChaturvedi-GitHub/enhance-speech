@@ -57,6 +57,8 @@ class Store:
     def _load(self) -> None:
         self.tracks = self._read_list()
         for track_id, track in list(self.tracks.items()):
+            # A download that was stopped partway leaves its export behind.
+            shutil.rmtree(TRACKS / track_id / "exports", ignore_errors=True)
             # A delete that could not save the list on a full disk leaves its track listed with no folder.
             if not (TRACKS / track_id).is_dir():
                 del self.tracks[track_id]
