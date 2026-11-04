@@ -15,6 +15,10 @@ _lock = threading.Lock()
 _model = None
 
 
+class TrackGone(Exception):
+    """The track was deleted before its transcript was finished."""
+
+
 def _timestamp(seconds: float) -> str:
     ms = int(round(seconds * 1000))
     h, ms = divmod(ms, 3600000)
@@ -29,7 +33,13 @@ def _read(folder: Path, channels: str) -> list:
     try:
         media.decode_for_speech(folder / "merged.mp4", channels, raw)
         segments, _ = _model.transcribe(np.fromfile(raw, dtype="float32"), beam_size=5, vad_filter=True)
-        return list(segments)
+        found = []
+        # Whisper only works as this loop asks for its next segment, so stopping here frees the CPU and the lock.
+        for segment in segments:
+            if not (folder / "merged.mp4").exists():
+                raise TrackGone()
+            found.append(segment)
+        return found
     finally:
         raw.unlink(missing_ok=True)
 
@@ -47,6 +57,9 @@ def transcript_files(folder: Path, speech_share: float = 0.0, channel: int | Non
     with _lock:
         if txt.exists() and srt.exists():
             return txt, srt
+        # This request may have waited behind another while the track was deleted.
+        if not (folder / "merged.mp4").exists():
+            raise TrackGone()
         global _model
         try:
             if _model is None:
@@ -67,6 +80,8 @@ def transcript_files(folder: Path, speech_share: float = 0.0, channel: int | Non
                 cues.append(f"{i}\n{_timestamp(segment.start)} --> {_timestamp(segment.end)}\n{text}\n")
             txt.write_text("\n".join(lines) + "\n", encoding="utf-8")
             srt.write_text("\n".join(cues), encoding="utf-8")
+        except FileNotFoundError:
+            raise TrackGone() from None
         finally:
             # Transcripts are cached, so the model is only needed again for another file.
             _model = None

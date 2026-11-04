@@ -200,6 +200,8 @@ def track_transcript(track_id: str, format: str = "txt") -> FileResponse:
     folder = jobs.TRACKS / track_id
     try:
         txt, srt = transcribe.transcript_files(folder, track.get("speechShare", 0.0), track.get("rawChannel"))
+    except transcribe.TrackGone:
+        raise HTTPException(404, "Track not found") from None
     except media.MediaError as err:
         raise HTTPException(500, str(err)) from err
     path = txt if format == "txt" else srt
