@@ -124,7 +124,7 @@ Sound, most likely to be noticed first:
 Running the app:
 
 - **First download fails:** a first v1 job can run on random weights if its model download fails. A truncated BandIt `model.pt` fails every v2 job until it is deleted.
-- **Smaller ones:** Ctrl-C during an ffmpeg stage marks the job failed, WAV exports past 4 GB are broken (over about 4 h 8 min), every download leaves a copy in the track's folder until the track is deleted, `run.sh`'s page-opening loop can outlive a failed start, and deleting a track does not stop its transcript.
+- **Smaller ones:** Ctrl-C during an ffmpeg stage marks the job failed, WAV exports past 4 GB are broken (over about 4 h 8 min), every download leaves a copy in the track's folder until the track is deleted, and deleting a track does not stop its transcript.
 - **Bad samples:** one NaN or inf sample in a float WAV fails the job with a generic error.
 - **`ui/e2e.py`, `ui/long_test.py`:** they crash on a failed job instead of reporting it.
 

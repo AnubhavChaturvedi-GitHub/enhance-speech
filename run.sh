@@ -19,6 +19,11 @@ fi
 echo "Enhance Speech: http://localhost:$PORT"
 # Opens the page once the server answers. NO_OPEN=1 skips this.
 if [ -z "$NO_OPEN" ]; then
-  ( until curl -fs "http://127.0.0.1:$PORT/api/tracks" >/dev/null 2>&1; do sleep 1; done; open "http://localhost:$PORT" ) &
+  # After the exec below, $$ is the server, so this stops with it rather than polling forever.
+  ( for _ in {1..120}; do
+      kill -0 $$ 2>/dev/null || exit 0
+      curl -fs "http://127.0.0.1:$PORT/api/tracks" >/dev/null 2>&1 && { open "http://localhost:$PORT"; exit 0; }
+      sleep 1
+    done ) &
 fi
 exec .venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port "$PORT" --log-level warning
