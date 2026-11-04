@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import threading
 import time
@@ -44,8 +45,7 @@ class Store:
         threading.Thread(target=self._worker, daemon=True, name="enhance-worker").start()
 
     def _load(self) -> None:
-        if INDEX.exists():
-            self.tracks = json.loads(INDEX.read_text())
+        self.tracks = self._read_list()
         for track_id, track in list(self.tracks.items()):
             # A delete that could not save the list on a full disk leaves its track listed with no folder.
             if not (TRACKS / track_id).is_dir():
@@ -60,6 +60,48 @@ class Store:
         self._save_if_room()
         self.wake.set()
 
+    def _read_list(self) -> dict[str, dict]:
+        if not INDEX.exists():
+            return {}
+        try:
+            tracks = json.loads(INDEX.read_text())
+            if isinstance(tracks, dict):
+                return tracks
+        except (OSError, ValueError):
+            pass
+        # All the tracks are still in their folders, so a damaged list must not keep the app from starting.
+        aside = INDEX.with_name(f"tracks.damaged-{int(time.time())}.json")
+        INDEX.replace(aside)
+        log.error("the track list was damaged and is kept as %s; rebuilding it from the track folders", aside.name)
+        return self._rebuilt_list()
+
+    def _rebuilt_list(self) -> dict[str, dict]:
+        """A list made from the track folders. Their original names were only in the old list."""
+        tracks = {}
+        for folder in TRACKS.iterdir():
+            source = next(iter(sorted(folder.glob("source.*"))), None)
+            if source is None:
+                continue
+            try:
+                info = media.probe(source)
+            except media.MediaError:
+                continue
+            done = (folder / "merged.mp4").exists()
+            tracks[folder.name] = {
+                "id": folder.name,
+                "trackName": f"Recovered {folder.name[:6]}{source.suffix}",
+                "sourceName": source.name,
+                "modelVersion": "v2",
+                "state": "finished" if done else "queued",
+                "stage": None,
+                "progress": 1 if done else 0,
+                "duration": info.duration if done else None,
+                "isVideo": info.has_video if done else False,
+                "error": None,
+                "createdAt": folder.stat().st_mtime,
+            }
+        return tracks
+
     def _save_if_room(self) -> None:
         """Saves the list, but a full disk must not stop the app: it is how the user deletes tracks to make room."""
         try:
@@ -69,7 +111,11 @@ class Store:
 
     def _save(self) -> None:
         tmp = INDEX.with_suffix(".tmp")
-        tmp.write_text(json.dumps(self.tracks, indent=1))
+        with open(tmp, "w") as f:
+            f.write(json.dumps(self.tracks, indent=1))
+            f.flush()
+            # So a power cut just after the rename cannot leave an empty list.
+            os.fsync(f.fileno())
         tmp.replace(INDEX)
 
     def list(self) -> list[dict]:
