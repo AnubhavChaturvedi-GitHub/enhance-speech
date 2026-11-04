@@ -157,10 +157,11 @@ def _run_v2(work: Path, original: np.memmap, mono: np.memmap, channel: int | Non
     map_blocks(separate, n, [isolated, music, background, fused], SR * 300, SR * 4, SR // 10, lambda f: report("separating_background", f))
 
     # Sidon hears the speech before the second denoiser pass, which blurs weak syllables into each other.
+    # The margin covers how far follow_input looks each way, so neighbouring blocks agree on the level where they meet.
     restored = _open(work / "restored.raw", n, 1)
     map_blocks(
         lambda lo, hi, p: level.follow_input(engines.restorer(np.asarray(fused[lo:hi]), p), np.asarray(isolated[lo:hi])),
-        n, [restored], SR * 30, SR * 2, SR // 20, lambda f: report("enhancing", f),
+        n, [restored], SR * 30, SR * 4, SR // 20, lambda f: report("enhancing", f),
     )
 
     shaped = _open(work / "shaped.raw", n, 1)

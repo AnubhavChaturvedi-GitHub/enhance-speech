@@ -111,7 +111,7 @@ Against Adobe's stems: isolated speech 21.3 dB SI-SDR, music 12.5 dB, background
 
 ## Open findings
 
-The last independent review was stopped at the owner's request, so no second reviewer checked these. The reviewer measured most of them on saved stems or by direct calls, and a few by reading the code. Most need an unusual file or a failure; the seam step and the download copies apply to any file. Fixed from that review: a key typed in the server's terminal cutting a file short, a failed job killing the worker, double-click delete taking the next track too, `ui/mock_shot.py` deleting real tracks, and the loud moments above.
+The last independent review was stopped at the owner's request, so no second reviewer checked these. The reviewer measured most of them on saved stems or by direct calls, and a few by reading the code. Most need an unusual file or a failure; the download copies apply to any file. Fixed from that review: a key typed in the server's terminal cutting a file short, a failed job killing the worker, double-click delete taking the next track too, `ui/mock_shot.py` deleting real tracks, and the loud moments above.
 
 Sound, most likely to be noticed first:
 
@@ -120,7 +120,6 @@ Sound, most likely to be noticed first:
 - **A long, loud music intro:** it can switch off the limit and low gate for the whole file, because `level.speech_share`'s whole-file figure is a power mean (`pipeline.py`).
 - **Hiss on part of a recording:** it tightens the limit on the clean part too (`limit.py`).
 - **Whispers:** the speech gate's breath rule can remove them. Tested on a synthetic whisper only.
-- **Seams:** `follow_input`'s 4 s smoothing does not fit its 2 s margin, which can leave a step of about 1.2 dB at a 30 s seam.
 
 Running the app:
 
