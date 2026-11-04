@@ -1,6 +1,7 @@
 """Local HTTP server: uploads, track list, stem media for the player, and exports."""
 from __future__ import annotations
 
+import errno
 import logging
 import re
 import shutil
@@ -75,11 +76,24 @@ def create_track(file: UploadFile = File(...), modelVersion: str = Form("v2")) -
     if ext not in AUDIO_EXT | VIDEO_EXT:
         raise HTTPException(415, "File extension or content not currently supported for enhancement.")
     mode = "v1" if modelVersion == "v1" else "v2"
-    track_id, folder = store.create(name, mode, f"source.{ext}")
-    with open(folder / f"source.{ext}", "wb") as out:
-        shutil.copyfileobj(file.file, out, 1024 * 1024)
-    store.enqueue(track_id)
-    return _public(store.get(track_id))
+    track_id = None
+    try:
+        track_id, folder = store.create(name, mode, f"source.{ext}")
+        with open(folder / f"source.{ext}", "wb") as out:
+            shutil.copyfileobj(file.file, out, 1024 * 1024)
+        store.enqueue(track_id)
+    except OSError as err:
+        # No row may stay behind holding part of a file.
+        if track_id is not None:
+            store.delete(track_id)
+        if err.errno == errno.ENOSPC:
+            raise HTTPException(507, "There is not enough free disk space for this file.") from err
+        raise
+    track = store.get(track_id)
+    # Deleted from the list while it was still arriving.
+    if track is None:
+        raise HTTPException(404, "Track not found")
+    return _public(track)
 
 
 @app.delete("/api/tracks/{track_id}")
