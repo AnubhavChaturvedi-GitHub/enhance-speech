@@ -18,6 +18,8 @@ import numpy as np
 import torch
 import torchaudio
 
+from . import media
+
 warnings.filterwarnings("ignore")
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -152,7 +154,11 @@ class SpeechDenoiser:
             first.join()
             from clearvoice import ClearVoice
 
-            self.cv = ClearVoice(task="speech_enhancement", model_names=["MossFormer2_SE_48K"]).models[0]
+            cv = ClearVoice(task="speech_enhancement", model_names=["MossFormer2_SE_48K"]).models[0]
+            # When its download fails ClearVoice only prints a warning, then runs on untrained weights and reports success.
+            if not (target / "checkpoints" / "MossFormer2_SE_48K" / "last_best_checkpoint").is_file():
+                raise media.MediaError("The v1 model could not be downloaded. Check your connection and try again.")
+            self.cv = cv
         finally:
             os.chdir(here)
 
